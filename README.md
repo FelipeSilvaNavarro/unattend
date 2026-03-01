@@ -1,8 +1,8 @@
 # autounattend.xml — Instalação automatizada do Windows (pt-BR)
 
-Este `autounattend.xml` automatiza a instalação do Windows e executa rotinas de pós-instalação para deixar o sistema pronto, com idioma pt-BR, menos telas no OOBE, menos apps “pré-instalados” e algumas preferências já ajustadas.
+Este `autounattendW10W11.xml` automatiza a instalação do Windows e executa rotinas de pós-instalação para deixar o sistema pronto, com idioma pt-BR, menos telas no OOBE, menos apps “pré-instalados” e algumas preferências já ajustadas.
 
-Ele também embute scripts que são extraídos para `C:\Windows\Setup\Scripts\` e executados em fases diferentes do Setup.
+Ele também embute scripts que são extraídos para `C:\\Windows\\Setup\\Scripts\\` e executados em fases diferentes do Setup.
 
 ---
 
@@ -35,7 +35,7 @@ Ele também embute scripts que são extraídos para `C:\Windows\Setup\Scripts\` 
 ### 4) First Logon (pós-instalação)
 - Instala o **Firefox** via `winget` (quando compatível).
 - Baixa e instala o **Microsoft Visual C++ Redistributable (x64)** em modo silencioso.
-- Habilita o **.NET Framework 3.5** usando `sources\sxs` (quando encontra a mídia/arquivos).
+- Habilita o **.NET Framework 3.5** usando `sources\\sxs` (quando encontra a mídia/arquivos).
 - Executa um instalador **Ninite** (`Ninite*Installer.exe`) automaticamente, se você colocar esse arquivo em alguma unidade/pendrive durante a instalação.
 - Faz limpeza de arquivos do unattended ao final e salva logs.
 
@@ -52,8 +52,8 @@ Ele também embute scripts que são extraídos para `C:\Windows\Setup\Scripts\` 
 ---
 
 ## Logs e rastreabilidade
-- Scripts: `C:\Windows\Setup\Scripts\*.ps1`
-- Logs: `C:\Windows\Setup\Scripts\Specialize.log`, `DefaultUser.log`, `FirstLogon.log`
+- Scripts: `C:\\Windows\\Setup\\Scripts\\*.ps1`
+- Logs: `C:\\Windows\\Setup\\Scripts\\Specialize.log`, `DefaultUser.log`, `FirstLogon.log`
   - Também existem logs específicos de remoção de apps/capabilities.
 
 ---
@@ -62,3 +62,9 @@ Ele também embute scripts que são extraídos para `C:\Windows\Setup\Scripts\` 
 - Este arquivo contém credenciais/senha em **texto puro** para a conta de automação.
 - Se o repositório for público, remova/mascare a senha antes de publicar.
 - Algumas escolhas reduzem proteções/alertas do Windows e mudam políticas do PowerShell; revise antes de usar em produção.
+
+---
+
+## Nome do arquivo (muito importante)
+- Para usar no **pendrive/mídia de instalação**: renomeie o arquivo para **`autounattend.xml`** (na raiz do pendrive).  
+- Para usar com **Sysprep** (imagem já instalada): renomeie o arquivo para **`unattend.xml`** e aponte esse arquivo no processo do Sysprep (ou coloque-o no local esperado pela sua rotina).
