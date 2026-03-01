@@ -1,46 +1,64 @@
-# autounattend.xml — Instalação automatizada do Windows (pt-BR) [file:1]
+# autounattend.xml — Instalação automatizada do Windows (pt-BR)
 
-Este `autounattend.xml` automatiza a instalação do Windows e executa uma rotina de pós-instalação para padronizar idioma/regionais, criar um usuário local administrador, simplificar o OOBE e aplicar ajustes/remoções (“debloat”) via PowerShell e Registro. [file:1]  
-Os scripts de automação ficam embutidos no próprio XML (seção `Extensions`), são extraídos para `C:\Windows\Setup\Scripts\` e executados em fases específicas do Setup. [file:1]
+Este `autounattend.xml` automatiza a instalação do Windows e executa rotinas de pós-instalação para deixar o sistema pronto, com idioma pt-BR, menos telas no OOBE, menos apps “pré-instalados” e algumas preferências já ajustadas.
 
----
-
-## Fluxo por fase [file:1]
-
-### 1) Boot / Windows PE (instalador) [file:1]
-- Define idioma/locale/teclado do Setup para **pt-BR**. [file:1]
-- Aceita a EULA e segue com intervenção mínima (interface aparece apenas em caso de erro). [file:1]
-- Mantém o particionamento em modo **interativo** (não força reparticionamento automático do disco). [file:1]
-
-### 2) Specialize (pré-OOBE) [file:1]
-- Extrai os scripts do XML para `C:\Windows\Setup\Scripts\`. [file:1]
-- Executa `Specialize.ps1` para aplicar ajustes no nível do sistema (máquina). [file:1]
-- Remove aplicativos provisionados e algumas “capabilities” do Windows (debloat). [file:1]
-- Aplica políticas/ajustes de experiência (ex.: Start com pins vazios, redução de sugestões/consumer features e ajustes relacionados a Edge/Chat/OneDrive). [file:1]
-- Prepara o perfil padrão (Default User) carregando `NTUSER.DAT`, aplicando configurações e descarregando o hive ao final. [file:1]
-- Gera logs de execução em `C:\Windows\Setup\Scripts\`. [file:1]
-
-### 3) OOBE (primeira experiência) [file:1]
-- Define idioma/teclado/locale do sistema para **pt-BR**. [file:1]
-- Cria o usuário local `Usuario` no grupo **Administrators**. [file:1]
-- Configura **AutoLogon por 1 vez** para concluir o pós-instalação automaticamente. [file:1]
-- Simplifica o OOBE (ex.: oculta EULA e pula a etapa de Wi‑Fi). [file:1]
-
-### 4) First Logon (pós-instalação) [file:1]
-- Executa `FirstLogon.ps1` via `FirstLogonCommands`. [file:1]
-- Instala softwares e pré-requisitos (ex.: Firefox via `winget`, VC++ Redistributable x64) e habilita .NET 3.5 quando a mídia `sources\sxs` estiver disponível. [file:1]
-- Opcionalmente executa um instalador `Ninite*Installer.exe` se encontrado em alguma unidade. [file:1]
-- Faz limpeza de artefatos do unattended (incluindo `C:\Windows\Panther\unattend.xml`) e registra logs. [file:1]
+Ele também embute scripts que são extraídos para `C:\Windows\Setup\Scripts\` e executados em fases diferentes do Setup.
 
 ---
 
-## Logs e arquivos gerados [file:1]
-- Scripts: `C:\Windows\Setup\Scripts\*.ps1` (extraídos do bloco `Extensions`). [file:1]
-- Logs: `C:\Windows\Setup\Scripts\Specialize.log`, `DefaultUser.log`, `FirstLogon.log`, além de logs de remoções (packages/capabilities). [file:1]
+## O que ele faz (por fase)
+
+### 1) Boot / Windows PE (instalador)
+- Define idioma/teclado/região do instalador para **pt-BR**.
+- Aceita a EULA e reduz interações (tende a mostrar telas só quando precisa).
+- Mantém o particionamento em modo **interativo** (você ainda escolhe/confirma disco/partições).
+
+### 2) Specialize (antes do OOBE)
+- Extrai e executa os scripts de customização do próprio XML.
+- Remove uma lista de apps provisionados (exemplos):
+  - 3D Viewer, Bing Search, Dev Home, Family, Feedback Hub, Get Help/Get Started,
+  - News/Weather, People, Skype, Teams (MicrosoftTeams/MSTeams), Wallet, Your Phone, Zune Video,
+  - Outlook (app), OneNote (app), Office Hub, Paint (app) e outros.
+- Remove o “Steps Recorder” (recurso/capability do Windows).
+- Desativa a instalação automática do “Chat/Teams” integrado.
+- Remove atalhos/instaladores do OneDrive que costumam reaparecer no menu/inicialização.
+- Ajusta o menu Iniciar para vir “limpo” (sem pins por padrão).
+- Ativa o plano de energia **Ultimate Performance** (quando disponível).
+- Define algumas políticas e preferências gerais do sistema (ex.: reduzir sugestões/conteúdo promocional, e ajustes do Edge para não “encher o saco” no primeiro uso — ele **não desinstala** o Edge, só ajusta comportamento).
+
+### 3) OOBE (primeira experiência)
+- Mantém o sistema em **pt-BR**.
+- Cria o usuário local `Usuario` como **Administrador**.
+- Faz **auto logon apenas uma vez** para conseguir rodar o pós-instalação automaticamente.
+- Oculta a página da EULA e pula a etapa de Wi‑Fi no OOBE.
+
+### 4) First Logon (pós-instalação)
+- Instala o **Firefox** via `winget` (quando compatível).
+- Baixa e instala o **Microsoft Visual C++ Redistributable (x64)** em modo silencioso.
+- Habilita o **.NET Framework 3.5** usando `sources\sxs` (quando encontra a mídia/arquivos).
+- Executa um instalador **Ninite** (`Ninite*Installer.exe`) automaticamente, se você colocar esse arquivo em alguma unidade/pendrive durante a instalação.
+- Faz limpeza de arquivos do unattended ao final e salva logs.
 
 ---
 
-## Atenção [file:1]
-- Este arquivo contém credenciais/senha em **texto puro** para a conta de automação. [file:1]
-- Se o repositório for público, remova/mascare a senha antes de publicar (ou substitua por um fluxo seguro). [file:1]
-- Algumas configurações reduzem proteções/alertas (ex.: SmartScreen/relacionados) e alteram políticas do PowerShell; revise antes de usar em produção. [file:1]
+## Ajustes de “preferências” aplicados
+- Mostra extensões de arquivo por padrão (mais fácil ver `.ps1`, `.bat`, `.txt`, etc.).
+- Deixa o Explorer abrindo em “Este Computador”.
+- Esconde a busca da barra de tarefas (fica mais limpo).
+- Habilita o menu de contexto “clássico” (estilo Windows 10).
+- Desativa “Sticky Keys” e remove aceleração do mouse (sensação mais consistente).
+- Habilita a opção de “End task” na barra de tarefas (quando disponível).
+
+---
+
+## Logs e rastreabilidade
+- Scripts: `C:\Windows\Setup\Scripts\*.ps1`
+- Logs: `C:\Windows\Setup\Scripts\Specialize.log`, `DefaultUser.log`, `FirstLogon.log`
+  - Também existem logs específicos de remoção de apps/capabilities.
+
+---
+
+## Atenção
+- Este arquivo contém credenciais/senha em **texto puro** para a conta de automação.
+- Se o repositório for público, remova/mascare a senha antes de publicar.
+- Algumas escolhas reduzem proteções/alertas do Windows e mudam políticas do PowerShell; revise antes de usar em produção.
